@@ -70,7 +70,8 @@ export default function Dashboard() {
     return <div className="p-8 text-white">Loading...</div>;
   }
 
-  const member = data?.org_members?.[0];
+  const queryData = data as any;
+  const member = queryData?.org_members?.[0];
   const org = member?.organization;
 
   if (!org) {

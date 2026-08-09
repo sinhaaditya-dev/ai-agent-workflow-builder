@@ -37,14 +37,16 @@ export default function NewWorkflow() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!data?.org_members?.[0]?.org_id) return;
+    const qData = data as any;
+    if (!qData?.org_members?.[0]?.org_id) return;
     
     try {
       const result = await createWorkflow({
-        variables: { name, orgId: data.org_members[0].org_id }
+        variables: { name, orgId: qData.org_members[0].org_id }
       });
-      if (result.data?.insert_workflows_one?.id) {
-        router.push(`/workflows/${result.data.insert_workflows_one.id}`);
+      const resData = result.data as any;
+      if (resData?.insert_workflows_one?.id) {
+        router.push(`/workflows/${resData.insert_workflows_one.id}`);
       }
     } catch (error) {
       console.error(error);

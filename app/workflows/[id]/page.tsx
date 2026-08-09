@@ -4,7 +4,7 @@ import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, use } from 'react';
-import { useUserData } from '@nhost/react';
+import { useUserData, useNhostClient } from '@nhost/react';
 import { Play, Plus, Server, Settings2, Webhook, Database, Cpu, CheckCircle } from 'lucide-react';
 
 const GET_WORKFLOW = gql`
@@ -42,22 +42,7 @@ const ADD_STEP = gql`
   }
 `;
 
-const TRIGGER_RUN = gql`
-  mutation TriggerRun($workflowId: uuid!) {
-    triggerWorkflowRun(input: { workflow_id: $workflowId }) {
-      workflow_run_id
-      status
-    }
-  }
-`;
 
-const APPROVE_STEP = gql`
-  mutation ApproveStep($stepRunId: uuid!) {
-    approveStep(input: { step_run_id: $stepRunId }) {
-      status
-    }
-  }
-`;
 
 const RUN_SUBSCRIPTION = gql`
   subscription GetRuns($workflowId: uuid!) {
@@ -78,25 +63,28 @@ const RUN_SUBSCRIPTION = gql`
 export default function WorkflowBuilder() {
   const { id } = useParams() as { id: string };
   const user = useUserData();
+  const nhost = useNhostClient();
   const router = useRouter();
 
-  const { data: wfData, loading: wfLoading, refetch } = useQuery(GET_WORKFLOW, {
+  const { data, loading: wfLoading, refetch } = useQuery(GET_WORKFLOW, {
     variables: { id }
   });
+  const wfData = data as any;
   
-  const { data: runData } = useSubscription(RUN_SUBSCRIPTION, {
+  const { data: rawRunData } = useSubscription(RUN_SUBSCRIPTION, {
     variables: { id }
   });
+  const runData = rawRunData as any;
 
   const [addStep] = useMutation(ADD_STEP);
-  const [triggerRun, { loading: isRunning }] = useMutation(TRIGGER_RUN);
-  const [approveStep, { loading: isApproving }] = useMutation(APPROVE_STEP);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
 
   if (wfLoading) return <div className="p-8 text-white">Loading Workflow...</div>;
   if (!wfData?.workflows_by_pk) return <div className="p-8 text-white">Workflow not found.</div>;
 
   const workflow = wfData.workflows_by_pk;
-  const member = workflow.organization.org_members.find((m: any) => m.user_id === user?.id);
+  const member = workflow?.organization?.org_members?.find((m: any) => m.user_id === user?.id);
   const role = member?.role;
   const canEdit = role === 'owner' || role === 'editor';
 
@@ -107,7 +95,7 @@ export default function WorkflowBuilder() {
         variables: {
           workflowId: id,
           type,
-          orderIndex: workflow.steps.length,
+          orderIndex: workflow?.steps?.length || 0,
           config: {}
         }
       });
@@ -119,10 +107,31 @@ export default function WorkflowBuilder() {
 
   const handleRun = async () => {
     if (!canEdit) return;
+    setIsRunning(true);
     try {
-      await triggerRun({ variables: { workflowId: id } });
+      const { res, error } = await nhost.functions.call('triggerWorkflowRun', {
+        input: { workflow_id: id }
+      });
+      if (error) throw error;
     } catch (e: any) {
       alert("Error starting run: " + e.message);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleApprove = async (stepRunId: string) => {
+    if (!canEdit) return;
+    setIsApproving(true);
+    try {
+      const { res, error } = await nhost.functions.call('approveStep', {
+        input: { step_run_id: stepRunId }
+      });
+      if (error) throw error;
+    } catch (e: any) {
+      alert("Error approving step: " + e.message);
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -152,7 +161,7 @@ export default function WorkflowBuilder() {
         {/* Canvas / Steps List */}
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
-            {workflow.steps.map((step: any, idx: number) => {
+            {workflow?.steps?.map((step: any, idx: number) => {
               // Find matching step_run if there is an active run
               const stepRun = activeRun?.step_runs?.find((sr: any) => sr.step_id === step.id);
               
@@ -197,7 +206,7 @@ export default function WorkflowBuilder() {
                       <div className="mt-4 p-4 bg-yellow-500/20 rounded-lg border border-yellow-500/30 flex justify-between items-center">
                         <div className="text-sm text-yellow-200">Requires Approval to proceed</div>
                         <button 
-                          onClick={() => approveStep({ variables: { stepRunId: stepRun.id } })}
+                          onClick={() => handleApprove(stepRun.id)}
                           disabled={isApproving}
                           className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm flex items-center gap-2"
                         >
