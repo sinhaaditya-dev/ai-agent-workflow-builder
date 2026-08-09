@@ -1,0 +1,12 @@
+table:
+  name: org_usage_stats
+  schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - org_id
+        - total_runs
+        - successful_runs
+        - failed_runs
+      filter: {}
