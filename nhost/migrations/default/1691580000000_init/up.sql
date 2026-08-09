@@ -67,7 +67,7 @@ CREATE TABLE step_runs (
 CREATE VIEW org_usage_stats AS
 SELECT 
   org_id,
-  COUNT(id) as total_runs,
+  COUNT(workflow_runs.id) as total_runs,
   COUNT(CASE WHEN status = 'completed' THEN 1 END) as successful_runs,
   COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_runs
 FROM workflow_runs
