@@ -1,0 +1,15 @@
+custom_types:
+  enums: []
+  input_objects: []
+  objects:
+    - name: ApproveStepResponse
+      fields:
+        - name: status
+          type: String!
+    - name: TriggerWorkflowRunResponse
+      fields:
+        - name: workflow_run_id
+          type: String!
+        - name: status
+          type: String!
+  scalars: []
