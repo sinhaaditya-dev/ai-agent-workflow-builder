@@ -1,8 +1,6 @@
-import { Request, Response } from 'express';
-
 // Nhost Function to approve a paused step.
 // Verifies caller has owner/editor role in the org before resuming.
-export default async function approveStep(req: Request, res: Response) {
+export default async function approveStep(req: any, res: any) {
   try {
     const { step_run_id } = req?.body?.input || {};
     

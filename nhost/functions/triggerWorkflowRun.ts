@@ -1,8 +1,6 @@
-import { Request, Response } from 'express';
-
 // Nhost Function to trigger a workflow run.
 // It verifies the caller is owner/editor in the workflow's org, checks quota, creates workflow_run, executes steps.
-export default async function triggerWorkflowRun(req: Request, res: Response) {
+export default async function triggerWorkflowRun(req: any, res: any) {
   try {
     const { workflow_id } = req?.body?.input || {};
     
