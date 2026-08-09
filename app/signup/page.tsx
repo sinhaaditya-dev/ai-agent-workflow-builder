@@ -3,7 +3,8 @@
 import { useSignUpEmailPassword, useUserData } from '@nhost/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, gql } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
+import { gql } from '@apollo/client';
 
 const CREATE_ORG = gql`
   mutation CreateOrg($orgName: String!, $userId: uuid!) {

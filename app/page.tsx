@@ -3,9 +3,25 @@
 import { useAuthenticationStatus, useUserData, useSignOut } from '@nhost/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import Link from 'next/link';
+
+const CREATE_ORG = gql`
+  mutation CreateOrg($orgName: String!, $userId: uuid!) {
+    insert_organizations_one(object: {
+      name: $orgName,
+      org_members: {
+        data: {
+          user_id: $userId,
+          role: "owner"
+        }
+      }
+    }) {
+      id
+    }
+  }
+`;
 
 const GET_ORG_DATA = gql`
   query GetOrgData($userId: uuid!) {
@@ -41,6 +57,9 @@ export default function Dashboard() {
     skip: !user?.id,
   });
 
+  const [createOrg, { loading: isCreatingOrg }] = useMutation(CREATE_ORG);
+  const [newOrgName, setNewOrgName] = useState('');
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
@@ -55,10 +74,45 @@ export default function Dashboard() {
   const org = member?.organization;
 
   if (!org) {
+    const handleCreateOrg = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!user?.id) return;
+      try {
+        await createOrg({
+          variables: { orgName: newOrgName, userId: user.id },
+          refetchQueries: [{ query: GET_ORG_DATA, variables: { userId: user.id } }]
+        });
+      } catch (err) {
+        console.error(err);
+        alert('Failed to create organization. Ensure permissions are applied.');
+      }
+    };
+
     return (
-      <div className="min-h-screen bg-zinc-950 p-8 text-white">
-        You are not a member of any organization.
-        <button onClick={() => signOut()} className="ml-4 text-indigo-400">Sign Out</button>
+      <div className="min-h-screen bg-zinc-950 p-8 text-white flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-bold mb-4">Almost there!</h2>
+        <p className="text-zinc-400 mb-8">You don't have a workspace yet. Let's create one.</p>
+        
+        <form onSubmit={handleCreateOrg} className="w-full max-w-md bg-zinc-900 p-6 rounded-xl border border-zinc-800">
+          <input
+            type="text"
+            required
+            placeholder="Organization Name"
+            value={newOrgName}
+            onChange={(e) => setNewOrgName(e.target.value)}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 mb-4 text-white"
+          />
+          <button
+            type="submit"
+            disabled={isCreatingOrg}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded disabled:opacity-50"
+          >
+            {isCreatingOrg ? 'Creating...' : 'Create Workspace'}
+          </button>
+        </form>
+        <button onClick={() => signOut()} className="mt-8 text-zinc-500 hover:text-white">
+          Sign Out
+        </button>
       </div>
     );
   }
