@@ -1,6 +1,6 @@
 - name: approveStep
   definition:
-    handler: '{{NHOST_BACKEND_URL}}/v1/functions/approveStep'
+    handler: '{{NHOST_FUNCTIONS_URL}}/approveStep'
     output_type: ApproveStepResponse
     arguments:
       - name: step_run_id
@@ -10,7 +10,7 @@
     - role: user
 - name: triggerWorkflowRun
   definition:
-    handler: '{{NHOST_BACKEND_URL}}/v1/functions/triggerWorkflowRun'
+    handler: '{{NHOST_FUNCTIONS_URL}}/triggerWorkflowRun'
     output_type: TriggerWorkflowRunResponse
     arguments:
       - name: workflow_id
