@@ -1,5 +1,0 @@
-version: 3
-endpoint: https://vxqkwpkzbxtguinmkjqc.hasura.ap-south-1.nhost.run
-admin_secret: HASURA_GRAPHQL_ADMIN_SECRET
-metadata_directory: metadata
-migrations_directory: migrations
