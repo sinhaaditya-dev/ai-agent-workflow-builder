@@ -1,20 +1,21 @@
-- name: approveStep
-  definition:
-    handler: '{{NHOST_FUNCTIONS_URL}}/approveStep'
-    output_type: ApproveStepResponse
-    arguments:
-      - name: step_run_id
-        type: uuid!
-    type: mutation
-  permissions:
-    - role: user
-- name: triggerWorkflowRun
-  definition:
-    handler: '{{NHOST_FUNCTIONS_URL}}/triggerWorkflowRun'
-    output_type: TriggerWorkflowRunResponse
-    arguments:
-      - name: workflow_id
-        type: uuid!
-    type: mutation
-  permissions:
-    - role: user
+actions:
+  - name: approveStep
+    definition:
+      handler: '{{NHOST_FUNCTIONS_URL}}/approveStep'
+      output_type: ApproveStepResponse
+      arguments:
+        - name: step_run_id
+          type: uuid!
+      type: mutation
+    permissions:
+      - role: user
+  - name: triggerWorkflowRun
+    definition:
+      handler: '{{NHOST_FUNCTIONS_URL}}/triggerWorkflowRun'
+      output_type: TriggerWorkflowRunResponse
+      arguments:
+        - name: workflow_id
+          type: uuid!
+      type: mutation
+    permissions:
+      - role: user
